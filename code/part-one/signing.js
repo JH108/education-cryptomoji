@@ -3,6 +3,8 @@
 const secp256k1 = require('secp256k1');
 const { randomBytes, createHash } = require('crypto');
 
+const makeHash = () => createHash('sha256')
+const makeBuffer = (hex) => Buffer.from(hex, 'hex')
 
 /**
  * A function which generates a new random Secp256k1 private key, returning
@@ -15,7 +17,10 @@ const { randomBytes, createHash } = require('crypto');
  */
 const createPrivateKey = () => {
   // Enter your solution here
+  const hash = makeHash()
+  hash.update(randomBytes(64))
 
+  return hash.digest('hex')
 };
 
 /**
@@ -33,7 +38,10 @@ const createPrivateKey = () => {
  */
 const getPublicKey = privateKey => {
   // Your code here
+  const buffer = makeBuffer(privateKey)
+  const pubKeyBuffer = secp256k1.publicKeyCreate(buffer)
 
+  return pubKeyBuffer.toString('hex')
 };
 
 /**
@@ -51,8 +59,21 @@ const getPublicKey = privateKey => {
  */
 const sign = (privateKey, message) => {
   // Your code here
-
+  // console.log('private key', privateKey);
+  // console.log('message', message);
+  const hash = makeHash()
+  hash.update(message)
+  const hashedMessageBuffer = hash.digest()
+  // console.log('hashed buffer', hashedMessageBuffer);
+  const privateKeyBuffer = makeBuffer(privateKey)
+  // console.log('pkbuf', privateKeyBuffer);
+  const signedString = secp256k1.sign(hashedMessageBuffer, privateKeyBuffer).signature.toString('hex')
+  // console.log('sig', signedString);
+  return signedString
 };
+// let k = createPrivateKey()
+// let m = 'VdxdgpUqQWfDIC40XN5I2PTwkko66QBph6hPJjlsrMuxMtjxbVRf9EorZMgwsItqzFILFVIiIlN8h47bttNBRdTHEQI5In6fUZvqFJ2nKSd5APBzeCyjJpAtv0HmUbB3iQw4ma94rkShgkHLLUeoaaI1hYk7rvuPwG1'
+// console.log(sign(k, m));
 
 /**
  * A function which takes a hex public key, a string message, and a hex
@@ -65,8 +86,15 @@ const sign = (privateKey, message) => {
  *   // false
  */
 const verify = (publicKey, message, signature) => {
-  // Your code here
+  // Your code here message, sig, key
+  const hash = makeHash()
+  const hexMessage = hash.update(message).digest()
+  const keyBuf = makeBuffer(publicKey)
+  const mBuf = makeBuffer(hexMessage)
+  const sigBuf = makeBuffer(signature)
+  const verified = secp256k1.verify(mBuf, sigBuf, keyBuf)
 
+  return verified
 };
 
 module.exports = {
