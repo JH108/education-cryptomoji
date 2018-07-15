@@ -1,8 +1,9 @@
 'use strict';
 
-const { createHash } = require('crypto');
+const { createHash, randomBytes } = require('crypto');
 const signing = require('./signing');
 
+const sha512 = (str) => createHash('sha512').update(str).digest('hex')
 
 /**
  * A simple signed Transaction class for sending funds from the signer to
@@ -22,8 +23,12 @@ class Transaction {
    *     other properties, signed with the provided private key
    */
   constructor(privateKey, recipient, amount) {
+    const message = `${signing.getPublicKey(privateKey)}${recipient}${amount}`
     // Enter your solution here
-
+    this.signature = signing.sign(privateKey, message)
+    this.recipient = recipient
+    this.amount = amount
+    this.source = signing.getPublicKey(privateKey)
   }
 }
 
@@ -45,7 +50,11 @@ class Block {
    */
   constructor(transactions, previousHash) {
     // Your code here
-
+    const nonce = Math.ceil(Math.random() * 100)
+    this.transactions = transactions
+    this.previousHash = previousHash
+    this.hash = sha512(`${transactions}${previousHash}${nonce}`)
+    this.nonce = nonce
   }
 
   /**
@@ -59,9 +68,28 @@ class Block {
    */
   calculateHash(nonce) {
     // Your code here
-
+    this.hash = sha512(`${this.transactions}${this.previousHash}${nonce}`)
+    this.nonce = nonce
   }
 }
+// const signer1 = signing.createPrivateKey();
+// const recipient1 = signing.getPublicKey(signing.createPrivateKey());
+// const amount1 = Math.ceil(Math.random() * 100);
+
+// let transactions = [ new Transaction(signer1, recipient1, amount1) ];
+// let previousHash = randomBytes(64).toString('hex');
+// let block = new Block(transactions, previousHash);
+// block.calculateHash(0);
+// const originalHash = block.hash;
+
+// const signer = signing.createPrivateKey();
+// const recipient = signing.getPublicKey(signing.createPrivateKey());
+// const amount = Math.ceil(Math.random() * 100);
+// const newTransaction = new Transaction(signer, recipient, amount);
+// block.transactions.push(newTransaction);
+
+// block.calculateHash(0);
+// console.log('block.hash !== originalHash', block.hash !== originalHash)
 
 /**
  * A Blockchain class for storing an array of blocks, each of which is linked
@@ -79,7 +107,9 @@ class Blockchain {
    */
   constructor() {
     // Your code here
-
+    this.blocks = [
+      { transactions: [], previousHash: null, hash: sha512(signing.createPrivateKey())}
+    ]
   }
 
   /**
@@ -87,7 +117,7 @@ class Blockchain {
    */
   getHeadBlock() {
     // Your code here
-
+    return this.blocks[this.blocks.length - 1]
   }
 
   /**
@@ -96,7 +126,7 @@ class Blockchain {
    */
   addBlock(transactions) {
     // Your code here
-
+    this.blocks.push(new Block(transactions, this.getHeadBlock().hash))
   }
 
   /**
@@ -110,9 +140,20 @@ class Blockchain {
    */
   getBalance(publicKey) {
     // Your code here
+    const received = this.blocks.reduce((acc, block) => acc + block.transactions.reduce((acc, transaction) => transaction.recipient === publicKey ? acc + transaction.amount : acc, 0), 0)
+    const spent = this.blocks.reduce((acc, block) => acc + block.transactions.reduce((acc, transaction) => transaction.source === publicKey ? acc + transaction.amount : acc, 0), 0)
 
+    return received - spent
   }
 }
+// let blockchain = new Blockchain()
+// const signer = signing.createPrivateKey();
+// const recipient = signing.getPublicKey(signing.createPrivateKey());
+// const transaction = new Transaction(signer, recipient, 100);
+// blockchain.addBlock([transaction]);
+
+// console.log(blockchain.getBalance(recipient))
+// console.log(blockchain.getBalance(signing.getPublicKey(signer)))
 
 module.exports = {
   Transaction,
