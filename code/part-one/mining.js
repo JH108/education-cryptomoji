@@ -4,7 +4,6 @@ const { createHash } = require('crypto');
 const signing = require('./signing');
 const { Block, Blockchain } = require('./blockchain');
 
-
 /**
  * A slightly modified version of a transaction. It should work mostly the
  * the same as the non-mineable version, but now recipient is optional,

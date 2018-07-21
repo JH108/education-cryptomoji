@@ -3,6 +3,7 @@
 const { createHash, randomBytes } = require('crypto');
 const signing = require('./signing');
 const blockchain = require('./blockchain')
+const sha512 = (str) => createHash('sha512').update(str).digest('hex')
 
 /**
  * A simple validation function for transactions. Accepts a transaction
@@ -13,7 +14,6 @@ const blockchain = require('./blockchain')
  */
 const isValidTransaction = transaction => {
   // Enter your solution here
-  console.log()
   return transaction.amount >= 0 && signing.verify(transaction.source, `${transaction.source}${transaction.recipient}${transaction.amount}`, transaction.signature)
 };
 
@@ -27,6 +27,10 @@ const isValidBlock = block => {
   // Your code here
   let validBlock = true
   const before = block.hash
+  block.calculateHash = function(nonce) {
+    this.hash = sha512(`${this.transactions}${this.previousHash}${nonce}`)
+    this.nonce = nonce
+  }
   block.calculateHash(block.nonce)
   const after = block.hash
   // console.log('before hash', block.hash)
@@ -38,8 +42,6 @@ const isValidBlock = block => {
   }
 
 	block.transactions.forEach(transaction => {
-		// console.log('is a valid transaction', isValidTransaction(transaction))
-		// console.log('!isValidTransaction(transaction)', !isValidTransaction(transaction));
 		if (!isValidTransaction(transaction)) {
 			validBlock = false
 		}
@@ -47,18 +49,7 @@ const isValidBlock = block => {
 	// console.log('is valid block', validBlock)
   return validBlock
 };
-const makeRandomTransaction = () => {
-  const signer = signing.createPrivateKey();
-  const recipient = signing.getPublicKey(signing.createPrivateKey());
-  const amount = Math.ceil(Math.random() * 100);
-  return new blockchain.Transaction(signer, recipient, amount);
-};
 
-const transactions = [ makeRandomTransaction() ];
-const previousHash = randomBytes(64).toString('hex');
-let block = new blockchain.Block(transactions, previousHash);
-console.log('chain', block)
-console.log(isValidBlock(block))
 /**
  * One more validation function. Accepts a blockchain, and returns true
  * or false. It should reject any blockchain that:
@@ -71,7 +62,27 @@ console.log(isValidBlock(block))
  */
 const isValidChain = blockchain => {
   // Your code here
+  let isValid = true
+  const blocks = blockchain.blocks
+  if (blocks[0].previousHash || blocks[0].transactions.length) {
+    isValid = false
+  }
 
+  blocks.forEach((block, index) => {
+    if ((!block.hash && index !== 0) || (!block.previousHash && index !== 0)) {
+      isValid = false
+    } else if (blocks[index - 1] && block.previousHash !== blocks[index - 1].hash) {
+      isValid = false
+    }
+  })
+
+  blocks.forEach((block, index) => {
+    if (!isValidBlock(block) && index !== 0) {
+      isValid = false
+    }
+  })
+
+  return isValid
 };
 
 /**
