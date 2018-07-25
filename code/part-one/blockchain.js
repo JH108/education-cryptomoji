@@ -68,7 +68,7 @@ class Block {
    */
   calculateHash(nonce) {
     // Your code here
-    this.hash = sha512(`${this.transactions}${this.previousHash}${nonce}`)
+    this.hash = sha512(`${this.transactions.map(t => t.signature).join('')}${this.previousHash}${nonce}`)
     this.nonce = nonce
   }
 }
