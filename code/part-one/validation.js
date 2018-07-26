@@ -92,7 +92,8 @@ const isValidChain = blockchain => {
  */
 const breakChain = blockchain => {
   // Your code here
-
+  blockchain.blocks[0].previousHash = 'hacked'
+  // blockchain.blocks[1].transactions[0].amount = 25
 };
 
 module.exports = {
