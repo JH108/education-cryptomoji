@@ -18,7 +18,12 @@ class MineableTransaction {
    */
   constructor(privateKey, recipient = null, amount) {
     // Enter your solution here
+    const pubKey = signing.getPublicKey(privateKey)
 
+    this.source = recipient ? pubKey : null
+    this.recipient = recipient || pubKey
+    this.amount = amount
+    this.signature = signing.sign(privateKey, `${pubKey}${this.recipient}${amount}`)
   }
 }
 
@@ -34,7 +39,9 @@ class MineableBlock extends Block {
    */
   constructor(transactions, previousHash) {
     // Your code here
-
+    super(transactions, previousHash)
+    this.hash = null
+    this.nonce = null
   }
 }
 

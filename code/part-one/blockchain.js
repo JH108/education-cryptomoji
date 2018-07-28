@@ -50,7 +50,7 @@ class Block {
    */
   constructor(transactions, previousHash) {
     // Your code here
-    const nonce = Math.ceil(Math.random() * 100)
+    const nonce = 0
     this.transactions = transactions
     this.previousHash = previousHash
     this.hash = sha512(`${transactions}${previousHash}${nonce}`)
