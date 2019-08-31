@@ -1,6 +1,8 @@
-import * as secp256k1 from 'secp256k1';
-import { randomBytes, createHash } from 'crypto';
+import * as secp256k1 from "secp256k1";
+import { randomBytes, createHash, createPublicKey } from "crypto";
 
+export const makeHash = () => createHash("sha256");
+export const makeBuffer = hex => Buffer.from(hex, "hex");
 
 /**
  * This module is essentially identical to part-one's signing module.
@@ -10,8 +12,10 @@ import { randomBytes, createHash } from 'crypto';
  * a 64 character hex string.
  */
 export const createPrivateKey = () => {
-  // Enter your solution here
+  const hash = makeHash();
+  hash.update(randomBytes(64));
 
+  return hash.digest("hex");
 };
 
 /**
@@ -19,8 +23,10 @@ export const createPrivateKey = () => {
  * 66 character hexadecimal string.
  */
 export const getPublicKey = privateKey => {
-  // Your code here
+  const buffer = makeBuffer(privateKey);
+  const pubKeyBuffer = secp256k1.publicKeyCreate(buffer);
 
+  return pubKeyBuffer.toString("hex");
 };
 
 /**
@@ -39,8 +45,12 @@ export const getPublicKey = privateKey => {
  *   // }
  */
 export const createKeys = () => {
-  // Your code here
+  const userKeys = {};
 
+  userKeys.privateKey = createPrivateKey();
+  userKeys.publicKey = createPublicKey(userKeys.privateKey);
+
+  return userKeys;
 };
 
 /**
@@ -48,6 +58,12 @@ export const createKeys = () => {
  * hexadecimal signature.
  */
 export const sign = (privateKey, message) => {
-  // Your code here
+  const hash = makeHash();
+  hash.update(message);
+  const hashedMessageBuffer = hash.digest();
+  const privateKeyBuffer = makeBuffer(privateKey);
+  const signatureObject = secp256k1.sign(hashedMessageBuffer, privateKeyBuffer);
+  const signature = signatureObject.signature.toString("hex");
 
+  return signature;
 };
