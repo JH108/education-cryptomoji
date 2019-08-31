@@ -14,8 +14,11 @@
  *   your object's keys or random transactions may fail.
  */
 export const encode = object => {
-  // Enter your solution here
+  const sortedKeys = Object.keys(object).sort();
+  const json = JSON.stringify(object, sortedKeys);
+  const jsonBuffer = Buffer.from(json, "ascii");
 
+  return jsonBuffer;
 };
 
 /**
@@ -28,6 +31,9 @@ export const encode = object => {
  *   base64 string -> Buffer -> JSON string -> object
  */
 export const decode = base64Str => {
-  // Your code here
+  const messageBuffer = Buffer.from(base64Str, "base64");
+  const messageString = messageBuffer.toString();
+  const messageObject = JSON.parse(messageString);
 
+  return messageObject;
 };
