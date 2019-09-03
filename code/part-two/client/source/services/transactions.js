@@ -4,15 +4,14 @@ import {
   Batch,
   BatchHeader,
   BatchList
-} from 'sawtooth-sdk/protobuf';
-import { createHash } from 'crypto';
-import { getPublicKey, sign } from './signing.js';
-import { encode } from './encoding.js';
+} from "sawtooth-sdk/protobuf";
+import { createHash } from "crypto";
+import { getPublicKey, sign, makeHash } from "./signing.js";
+import { encode } from "./encoding.js";
 
-
-const FAMILY_NAME = 'cryptomoji';
-const FAMILY_VERSION = '0.1';
-const NAMESPACE = '5f4d76';
+const FAMILY_NAME = "cryptomoji";
+const FAMILY_VERSION = "0.1";
+const NAMESPACE = "5f4d76";
 
 /**
  * A function that takes a private key and a payload and returns a new
@@ -29,7 +28,11 @@ const NAMESPACE = '5f4d76';
  */
 export const createTransaction = (privateKey, payload) => {
   // Enter your solution here
-
+  const encodedPayload = encode(payload);
+  const payloadHash = makeHash();
+  payloadHash.update(encodedPayload);
+  const digestedPayload = payloadHash.digest("base64");
+  console.log(digestedPayload);
 };
 
 /**
@@ -41,7 +44,6 @@ export const createTransaction = (privateKey, payload) => {
  */
 export const createBatch = (privateKey, transactions) => {
   // Your code here
-
 };
 
 /**
@@ -54,7 +56,7 @@ export const createBatch = (privateKey, transactions) => {
  */
 export const encodeBatches = batches => {
   if (!Array.isArray(batches)) {
-    batches = [ batches ];
+    batches = [batches];
   }
   const batchList = BatchList.encode({ batches }).finish();
 
@@ -74,5 +76,4 @@ export const encodeBatches = batches => {
  */
 export const encodeAll = (privateKey, payloads) => {
   // Your code here
-
 };
