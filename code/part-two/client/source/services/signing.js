@@ -1,5 +1,5 @@
 import * as secp256k1 from "secp256k1";
-import { randomBytes, createHash, createPublicKey } from "crypto";
+import { randomBytes, createHash } from "crypto";
 
 export const makeHash = () => createHash("sha256");
 export const makeBuffer = hex => Buffer.from(hex, "hex");
@@ -48,7 +48,7 @@ export const createKeys = () => {
   const userKeys = {};
 
   userKeys.privateKey = createPrivateKey();
-  userKeys.publicKey = createPublicKey(userKeys.privateKey);
+  userKeys.publicKey = getPublicKey(userKeys.privateKey);
 
   return userKeys;
 };

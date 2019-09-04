@@ -33,6 +33,10 @@ export const createTransaction = (privateKey, payload) => {
   payloadHash.update(encodedPayload);
   const digestedPayload = payloadHash.digest("base64");
   console.log(digestedPayload);
+  const transaction = Transaction.create(payload);
+  const header = TransactionHeader.encode(transaction).finish();
+  console.log("transaction", transaction);
+  console.log("header", header);
 };
 
 /**
