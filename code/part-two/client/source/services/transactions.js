@@ -25,18 +25,45 @@ const NAMESPACE = "5f4d76";
  *     - Transaction.create({ ... })
  *
  *   Also, don't forget to encode your payload!
+ * EXAMPLE HEADER: 
+ * familyName: 'intkey',
+    familyVersion: '1.0',
+    inputs: ['1cf1266e282c41be5e4254d8820772c5518a2c5a8c0c7f7eda19594a7eb539453e1ed7'],
+    outputs: ['1cf1266e282c41be5e4254d8820772c5518a2c5a8c0c7f7eda19594a7eb539453e1ed7'],
+    signerPublicKey: signer.getPublicKey().asHex(),
+    // In this example, we're signing the batch with the same private key,
+    // but the batch can be signed by another party, in which case, the
+    // public key will need to be associated with that key.
+    batcherPublicKey: signer.getPublicKey().asHex(),
+    // In this example, there are no dependencies.  This list should include
+    // an previous transaction header signatures that must be applied for
+    // this transaction to successfully commit.
+    // For example,
+    // dependencies: ['540a6803971d1880ec73a96cb97815a95d374cbad5d865925e5aa0432fcf1931539afe10310c122c5eaae15df61236079abbf4f258889359c4d175516934484a'],
+    dependencies: [],
+    payloadSha512: createHash('sha512').update(payloadBytes).digest('hex')
  */
 export const createTransaction = (privateKey, payload) => {
-  // Enter your solution here
   const encodedPayload = encode(payload);
   const payloadHash = makeHash();
   payloadHash.update(encodedPayload);
   const digestedPayload = payloadHash.digest("base64");
-  console.log(digestedPayload);
-  const transaction = Transaction.create(payload);
-  const header = TransactionHeader.encode(transaction).finish();
+  console.log("digested payload", digestedPayload);
+
+  const header = TransactionHeader.encode({
+    familyName: FAMILY_NAME,
+    familyVersion: FAMILY_VERSION,
+    signerPublicKey: getPublicKey(privateKey)
+  }).finish();
+  // Need to make header signature by signing the encoded header
+  const transaction = Transaction.create({
+    header,
+    payload: digestedPayload,
+    headerSignature: ""
+  });
   console.log("transaction", transaction);
   console.log("header", header);
+  const signedTransaction = sign(privateKey);
 };
 
 /**
