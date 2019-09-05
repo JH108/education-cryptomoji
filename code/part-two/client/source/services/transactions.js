@@ -6,13 +6,14 @@ import {
   BatchList
 } from "sawtooth-sdk/protobuf";
 import { createHash } from "crypto";
-import { getPublicKey, sign, makeHash } from "./signing.js";
+import { getPublicKey, sign } from "./signing.js";
 import { encode } from "./encoding.js";
 
 const FAMILY_NAME = "cryptomoji";
 const FAMILY_VERSION = "0.1";
 const NAMESPACE = "5f4d76";
 
+export const makeNonce = () => Math.floor(Math.random() * 10000).toFixed();
 /**
  * A function that takes a private key and a payload and returns a new
  * signed Transaction instance.
@@ -43,27 +44,37 @@ const NAMESPACE = "5f4d76";
     dependencies: [],
     payloadSha512: createHash('sha512').update(payloadBytes).digest('hex')
  */
+// Initially doesn't have any inputs or outputs or dependencies because it isn't accessing anything on the chain
+/**
+ * Inputs = transaction is allow to read from
+ * Outputs = transaction is allow to write too
+ * Dependencies = places on the chain this transaction is dependant on
+ */
 export const createTransaction = (privateKey, payload) => {
   const encodedPayload = encode(payload);
-  const payloadHash = makeHash();
+  const payloadHash = createHash("sha512");
   payloadHash.update(encodedPayload);
-  const digestedPayload = payloadHash.digest("base64");
-  console.log("digested payload", digestedPayload);
-
+  const digestedPayload = payloadHash.digest("hex");
+  const publicKey = getPublicKey(privateKey);
   const header = TransactionHeader.encode({
     familyName: FAMILY_NAME,
     familyVersion: FAMILY_VERSION,
-    signerPublicKey: getPublicKey(privateKey)
+    signerPublicKey: publicKey,
+    batcherPublicKey: publicKey,
+    inputs: [NAMESPACE],
+    outputs: [NAMESPACE],
+    dependencies: [],
+    payloadSha512: digestedPayload,
+    nonce: makeNonce()
   }).finish();
-  // Need to make header signature by signing the encoded header
+  const signedHeader = sign(privateKey, header);
   const transaction = Transaction.create({
     header,
-    payload: digestedPayload,
-    headerSignature: ""
+    payload: encodedPayload,
+    headerSignature: signedHeader
   });
-  console.log("transaction", transaction);
-  console.log("header", header);
-  const signedTransaction = sign(privateKey);
+
+  return transaction;
 };
 
 /**
