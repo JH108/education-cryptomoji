@@ -68,9 +68,6 @@ describe("Transactions module", function() {
       const payloadHash = createHash("sha512")
         .update(encode(payload))
         .digest("hex");
-      console.log("got here!!!", payloadHash);
-      console.log("got here nonce!!!", header.nonce);
-      console.log("got here repeat nonce!!!", repeatNonce);
 
       expect(header.nonce).to.be.set.and.not.equal(repeatNonce);
       expect(header.payloadSha512).to.be.set.and.be.a.hexString.and.equal(
