@@ -85,7 +85,26 @@ export const createTransaction = (privateKey, payload) => {
  * transaction with no array.
  */
 export const createBatch = (privateKey, transactions) => {
-  // Your code here
+  let transactionArray = Array.from(transactions);
+  if (transactionArray.length === 0) {
+    transactionArray.push(transactions);
+  }
+  const transactionIds = transactionArray.map(
+    transaction => transaction.headerSignature
+  );
+  const signerPublicKey = getPublicKey(privateKey);
+  const header = BatchHeader.encode({
+    signerPublicKey,
+    transactionIds
+  }).finish();
+  const headerSignature = sign(privateKey, header);
+  const batch = Batch.create({
+    header,
+    headerSignature,
+    transactions: transactionArray
+  });
+
+  return batch;
 };
 
 /**
@@ -116,6 +135,16 @@ export const encodeBatches = batches => {
  * As with the other methods, it should handle both a single payload, or
  * multiple payloads in an array.
  */
+// Could modify this to be more performant by maxing out on the payloads it allows per batch
 export const encodeAll = (privateKey, payloads) => {
-  // Your code here
+  if (!Array.isArray(payloads)) {
+    payloads = [payloads];
+  }
+  const transactions = payloads.map(payload =>
+    createTransaction(privateKey, payload)
+  );
+  const batch = createBatch(privateKey, transactions);
+  const encodedBatch = encodeBatches([batch]);
+
+  return encodedBatch;
 };
