@@ -109,13 +109,17 @@ export const getOfferAddress = (ownerKey = null, moji = null) => {
     address = `${address}${ownerHash}`;
   }
 
-  if (moji) {
-    // Check if it is an address or dna
-    // const dnaHash = createHash("sha512")
-    //   .update(dna)
-    //   .digest("hex")
-    //   .slice(0, 54);
-    // address = `${address}${dnaHash}`;
+  if (Array.isArray(moji)) {
+    const hash = createHash("sha512");
+    const newMoji = moji.slice().sort();
+    newMoji.forEach(m => hash.update(m));
+    const fullHash = hash.digest("hex");
+    address = `${address}${fullHash.slice(0, 54)}`;
+  } else if (moji) {
+    const hash = createHash("sha512")
+      .update(moji)
+      .digest("hex");
+    address = `${address}${hash.slice(0, 54)}`;
   }
 
   return address;
